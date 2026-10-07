@@ -1,0 +1,56 @@
+name: Windows 测试与构建
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: 获取源码
+        uses: actions/checkout@v4
+      - name: 配置 Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-build-lock.txt
+      - name: 配置 Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 安装固定依赖
+        shell: pwsh
+        run: |
+          python -m pip install -r requirements-build-lock.txt
+          if ($LASTEXITCODE -ne 0) { throw '依赖安装失败。' }
+      - name: 验证接口契约与语法
+        shell: pwsh
+        run: |
+          python scripts/check_dependency.py
+          if ($LASTEXITCODE -ne 0) { throw '接口契约检查失败。' }
+          python -m compileall -q -x '(^|[/\\])\.venv([/\\]|$)' .
+          if ($LASTEXITCODE -ne 0) { throw '语法检查失败。' }
+      - name: 运行测试
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py'
+          if ($LASTEXITCODE -ne 0) { throw '测试失败。' }
+      - name: 构建与校验 Windows 成品
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - name: 保存 Windows 下载包
+        uses: actions/upload-artifact@v4
+        with:
+          name: wechat-qq-export-Windows-x64
+          path: |
+            dist/wechat-qq-export-Windows-x64-*.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error

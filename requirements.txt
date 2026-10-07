@@ -1,0 +1,10 @@
+zstandard
+Pillow
+psutil
+imageio-ffmpeg
+sherpa-onnx==1.13.6
+soundfile>=0.12,<1
+wechatauto-replica==1.2.4.4
+beautifulsoup4==4.15.0
+markdownify==1.2.2
+websocket-client==1.9.2

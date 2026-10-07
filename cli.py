@@ -1,0 +1,123 @@
+# -*- coding: utf-8 -*-
+# 本派生版本已修改此上游文件，改动范围见 NOTICE。
+import argparse
+
+from exporter_core import (
+    AmbiguousContactError, clear_sensitive_cache, export_chat,
+    install_local_asr_model, install_rust_silk, parse_time_range,
+)
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser(description="微信聊天信息导出给大模型")
+    p.add_argument("name", nargs="?", help="好友备注/昵称或群名")
+    p.add_argument("--out", default="exports")
+    p.add_argument("--start", help="北京时间起始日期/时间，包含；支持 YYYY-MM-DD、YYYY-MM-DD HH:MM[:SS]")
+    p.add_argument("--end", help="北京时间结束日期/时间；日期包含整日，带时间不包含该时刻")
+    p.add_argument("--chat-id", help="精确会话 username，用于区分同名群聊/联系人")
+    p.add_argument(
+        "--images",
+        action="store_true",
+        help="同时导出本机仍有缓存的聊天图片",
+    )
+    p.add_argument(
+        "--files",
+        action="store_true",
+        help="同时导出本机仍有缓存的聊天文件",
+    )
+    p.add_argument("--voices", action="store_true", help="同时导出语音；有解码器时生成 WAV")
+    p.add_argument("--videos", action="store_true", help="同时导出本机仍有缓存的视频")
+    p.add_argument(
+        "--transcribe-voices",
+        action="store_true",
+        help="用本地 SenseVoice 将导出的语音转成文字；会自动开启语音导出",
+    )
+    p.add_argument(
+        "--media",
+        action="store_true",
+        help="同时开启图片、文件、语音和视频导出",
+    )
+    p.add_argument(
+        "--install-asr",
+        action="store_true",
+        help="下载安装本地 SenseVoice 语音识别模型后退出",
+    )
+    p.add_argument(
+        "--install-rust-silk",
+        action="store_true",
+        help="下载安装 rust-silk 语音解码器后退出",
+    )
+    p.add_argument(
+        "--clear-sensitive-cache",
+        action="store_true",
+        help=(
+            "清除当前版本临时敏感缓存，以及 v1.3.3 及更早版本 / "
+            "wechatauto-replica 默认留下的密钥和解密数据库缓存后退出"
+        ),
+    )
+    p.add_argument(
+        "--db-dir",
+        default=None,
+        help=(
+            "微信数据目录（微信「设置 → 文件管理」里显示的那个）。"
+            "默认自动探测；数据目录被自行迁移过、或自动探测读到错误副本时指定。"
+        ),
+    )
+    a = p.parse_args()
+
+    if a.install_asr:
+        install_local_asr_model(progress=print)
+        raise SystemExit(0)
+    if a.install_rust_silk:
+        install_rust_silk(progress=print)
+        raise SystemExit(0)
+    if a.clear_sensitive_cache:
+        report = clear_sensitive_cache()
+        for path in report.get("removed") or []:
+            print("已清除：" + path)
+        if not report.get("removed"):
+            print("没有发现需要清理的敏感缓存。")
+        failed = report.get("failed") or []
+        if failed:
+            for item in failed:
+                print(
+                    "清理失败："
+                    + str(item.get("path"))
+                    + "："
+                    + str(item.get("error"))
+                )
+            raise SystemExit(1)
+        raise SystemExit(0)
+    if not a.name and not a.chat_id:
+        p.error(
+            "请提供好友备注/昵称或群名；"
+            "或使用 --install-asr / --install-rust-silk / "
+            "--clear-sensitive-cache"
+        )
+
+    try:
+        parse_time_range(a.start, a.end)
+        result = export_chat(
+            a.name or a.chat_id,
+            a.out,
+            progress=print,
+            export_images=(a.images or a.media),
+            export_files=(a.files or a.media),
+            export_voices=(a.voices or a.media or a.transcribe_voices),
+            export_videos=(a.videos or a.media),
+            transcribe_voices=a.transcribe_voices,
+            db_dir=a.db_dir,
+            start_time=a.start,
+            end_time=a.end,
+            chat_id=a.chat_id,
+        )
+    except AmbiguousContactError as exc:
+        print(str(exc))
+        for candidate in exc.candidates:
+            label = candidate.get("remark") or candidate.get("nick_name") or candidate["username"]
+            kind = "群聊" if candidate["username"].endswith("@chatroom") else "联系人"
+            print(f"{kind}：{label}；--chat-id {candidate['username']}")
+        raise SystemExit(2)
+    except ValueError as exc:
+        p.error(str(exc))
+    print(result)

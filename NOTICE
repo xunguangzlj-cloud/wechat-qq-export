@@ -1,0 +1,14 @@
+微信 / QQ 聊天与公众号文章导出
+派生版本：v1.3.5-local.9，2026-10-07
+
+本项目基于 zhuzhangxue/wechat-chat-export（Apache-2.0）派生。
+上游：https://github.com/zhuzhangxue/wechat-chat-export
+固定基线：f438105d5043e899002ca04c6f5d74e4d36c9e8c（v1.3.5）
+上游著作权和许可声明保持有效，参见 LICENSE。
+
+本派生版本修改 app.py、cli.py、exporter_core.py、preview.py、wechat_data_dirs.py，
+增加时间筛选和日期交互、名称消歧、按显示名命名、批量增量、媒体与预览适配。
+新增独立 QQ 本机接口适配、公众号正文与浏览器页面采集、保存网页导入、
+微信本地文章链接提取及 WeRSS 已采集历史读取模块，补充测试和 Windows 构建流程。
+QQ / WeRSS 等外部服务不包含在本仓库发行包内。
+第三方组件及许可见 THIRD_PARTY_NOTICES.md。
