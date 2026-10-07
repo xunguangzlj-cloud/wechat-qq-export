@@ -88,3 +88,12 @@ pwsh -File scripts/build_windows.ps1
 基于 [zhuzhangxue/wechat-chat-export](https://github.com/zhuzhangxue/wechat-chat-export) 的 v1.3.5 派生，基线提交 `f438105d5043e899002ca04c6f5d74e4d36c9e8c`。新增 QQ、公众号、批量增量、日期交互及命名等功能，并修复文章正文解析。具体改动见 [NOTICE](NOTICE)，相关项目见 [参考项目](docs/参考项目.md)。
 
 保留上游 [Apache-2.0 许可证](LICENSE) 和 [第三方声明](THIRD_PARTY_NOTICES.md)。QQ / WeRSS 服务需要分别部署，不打包其运行组件。本仓库不包含聊天数据、账号密钥、真实文章导出或本机安装记录。
+
+## 支持作者
+
+如果这些项目对你有帮助的话，给个star吧~也可以投喂作者一杯奶茶（比心）
+
+<p>
+  <a href="assets/donate/alipay.jpg"><img src="assets/donate/alipay.jpg" alt="支付宝收款码" width="300"></a>
+  <a href="assets/donate/wechat.jpg"><img src="assets/donate/wechat.jpg" alt="微信收款码" width="300"></a>
+</p>
