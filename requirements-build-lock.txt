@@ -29,7 +29,7 @@ sherpa_onnx==1.13.6
 soundfile==0.14.0
 typing_extensions==4.16.0
 uiautomation==2.0.29
-wechatauto-replica==1.2.4.4
+wechatauto-replica==1.2.6
 winsdk==1.0.0b10
 zstandard==0.25.0
 beautifulsoup4==4.15.0
